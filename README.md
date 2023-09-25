@@ -1,2 +1,2 @@
 # osu-music
-Listen to music directly from osu folder
+Extract mp3s from osu folder.
