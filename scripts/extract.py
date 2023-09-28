@@ -1,13 +1,43 @@
 import argparse
+from io import TextIOWrapper
 import os
 import pathlib
+import shutil
+import typing as t
+
+import tqdm
+
+
+DictKeys: t.TypeAlias = t.Literal["AudioFilename"] | t.Literal["TitleUnicode"] | t.Literal["ArtistUnicode"]
+
+
+def load_osu(file: TextIOWrapper) -> dict[DictKeys, str]:
+    cur_object = {}
+    for line in file:
+        for field in [
+            "AudioFilename",
+            "TitleUnicode",
+            "ArtistUnicode",
+        ]:
+            if line.startswith(field):
+                cur_object[field] = line.split(":")[-1].strip()
+
+    return cur_object
+
 
 def extract_audio(path: pathlib.Path):
     songs_dir = path / "Songs"
-    c = 0
-    for path in songs_dir.rglob("*.osu"):
-        c += 1
-    print(c)
+    os.makedirs("out", exist_ok=True)
+    for folder_name in tqdm.tqdm(os.listdir(songs_dir)):
+        audio_files = {}
+        for osus in (songs_dir / folder_name).glob("*.osu"):
+            with open(osus, encoding="utf-8") as f:
+                data = load_osu(f)
+                filename = data["AudioFilename"]
+                audio_files[filename] = data
+        for k, v in audio_files.items():
+            shutil.move(songs_dir / folder_name / k, pathlib.Path("out") / k)
+        break
 
 
 if __name__ == "__main__":
