@@ -2,6 +2,7 @@ import argparse
 from io import TextIOWrapper
 import os
 import pathlib
+import re
 import shutil
 import typing as t
 
@@ -28,6 +29,7 @@ def load_osu(file: TextIOWrapper) -> dict[DictKeys, str]:
 
 
 def extract_audio(path: pathlib.Path):
+    pattern = re.compile(r"[<>:\"/\\|?*]")
     songs_dir = path / "Songs"
     os.makedirs("out", exist_ok=True)
     for folder_name in tqdm.tqdm(os.listdir(songs_dir)):
@@ -39,6 +41,8 @@ def extract_audio(path: pathlib.Path):
                 audio_files[filename] = data
         for k, v in audio_files.items():
             copied_filename = f'{v["TitleUnicode"]}.{v["AudioFilename"].split(".")[-1]}'
+            copied_filename = re.sub(pattern, "", copied_filename)
+            # for x in invalid_chars:
             shutil.copy2(
                 songs_dir / folder_name / k,
                 pathlib.Path("out") / copied_filename
