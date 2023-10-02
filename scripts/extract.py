@@ -26,6 +26,7 @@ def load_osu(file: TextIOWrapper) -> dict[DictKeys, str]:
             "TitleUnicode",
             "ArtistUnicode",
             "Title",
+            "Artist",
         ]:
             if line.startswith(field):
                 cur_object[field] = line.split(":")[-1].strip()
@@ -49,6 +50,12 @@ def extract_audio(path: pathlib.Path):
                 title = v["TitleUnicode"]
             else:
                 title = v["Title"]
+
+            if "ArtistUnicode" in v:
+                artist = v["ArtistUnicode"]
+            else:
+                artist = v["Artist"]
+
             copied_filename = f'{title}.{v["AudioFilename"].split(".")[-1]}'
             copied_filename = re.sub(pattern, "", copied_filename)
             # for x in invalid_chars:
@@ -58,7 +65,7 @@ def extract_audio(path: pathlib.Path):
             )
             f = music_tag.load_file(pathlib.Path("out") / copied_filename)
             f["title"] = title
-            f["artist"] = v["ArtistUnicode"]
+            f["artist"] = artist
 
 
 if __name__ == "__main__":
