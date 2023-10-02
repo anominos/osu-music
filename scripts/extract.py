@@ -11,8 +11,12 @@ import music_tag
 import tqdm
 
 
-DictKeys: t.TypeAlias = t.Literal["AudioFilename"] | t.Literal["TitleUnicode"] | t.Literal["ArtistUnicode"]
-
+DictKeys: t.TypeAlias = (
+    t.Literal["AudioFilename"] |
+    t.Literal["TitleUnicode"] |
+    t.Literal["ArtistUnicode"] |
+    t.Literal["Title"]
+)
 
 def load_osu(file: TextIOWrapper) -> dict[DictKeys, str]:
     cur_object = {}
@@ -21,6 +25,7 @@ def load_osu(file: TextIOWrapper) -> dict[DictKeys, str]:
             "AudioFilename",
             "TitleUnicode",
             "ArtistUnicode",
+            "Title",
         ]:
             if line.startswith(field):
                 cur_object[field] = line.split(":")[-1].strip()
@@ -40,7 +45,11 @@ def extract_audio(path: pathlib.Path):
                 filename = data["AudioFilename"]
                 audio_files[filename] = data
         for k, v in audio_files.items():
-            copied_filename = f'{v["TitleUnicode"]}.{v["AudioFilename"].split(".")[-1]}'
+            if "TitleUnicode" in v:
+                title = v["TitleUnicode"]
+            else:
+                title = v["Title"]
+            copied_filename = f'{title}.{v["AudioFilename"].split(".")[-1]}'
             copied_filename = re.sub(pattern, "", copied_filename)
             # for x in invalid_chars:
             shutil.copy2(
@@ -48,7 +57,7 @@ def extract_audio(path: pathlib.Path):
                 pathlib.Path("out") / copied_filename
             )
             f = music_tag.load_file(pathlib.Path("out") / copied_filename)
-            f["title"] = v["TitleUnicode"]
+            f["title"] = title
             f["artist"] = v["ArtistUnicode"]
 
 
