@@ -59,13 +59,17 @@ def extract_audio(path: pathlib.Path):
             copied_filename = f'{title}.{v["AudioFilename"].split(".")[-1]}'
             copied_filename = re.sub(pattern, "", copied_filename)
             # for x in invalid_chars:
-            shutil.copy2(
-                songs_dir / folder_name / k,
-                pathlib.Path("out") / copied_filename
-            )
-            f = music_tag.load_file(pathlib.Path("out") / copied_filename)
-            f["title"] = title
-            f["artist"] = artist
+            try:
+                shutil.copy2(
+                    songs_dir / folder_name / k,
+                    pathlib.Path("out") / copied_filename
+                )
+                f = music_tag.load_file(pathlib.Path("out") / copied_filename)
+                f["title"] = title
+                f["artist"] = artist
+            except Exception as e:
+                print("Warning, ", e)
+                pass
 
 
 if __name__ == "__main__":
