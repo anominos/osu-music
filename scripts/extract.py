@@ -5,6 +5,8 @@ import pathlib
 import shutil
 import typing as t
 
+import music_tag
+
 import tqdm
 
 
@@ -29,15 +31,21 @@ def extract_audio(path: pathlib.Path):
     songs_dir = path / "Songs"
     os.makedirs("out", exist_ok=True)
     for folder_name in tqdm.tqdm(os.listdir(songs_dir)):
-        audio_files = {}
+        audio_files: dict[str, dict[DictKeys, str]] = {}
         for osus in (songs_dir / folder_name).glob("*.osu"):
             with open(osus, encoding="utf-8") as f:
                 data = load_osu(f)
                 filename = data["AudioFilename"]
                 audio_files[filename] = data
         for k, v in audio_files.items():
-            shutil.move(songs_dir / folder_name / k, pathlib.Path("out") / k)
-        break
+            copied_filename = f'{v["TitleUnicode"]}.{v["AudioFilename"].split(".")[-1]}'
+            shutil.copy2(
+                songs_dir / folder_name / k,
+                pathlib.Path("out") / copied_filename
+            )
+            f = music_tag.load_file(pathlib.Path("out") / copied_filename)
+            f["title"] = v["TitleUnicode"]
+            f["artist"] = v["ArtistUnicode"]
 
 
 if __name__ == "__main__":
